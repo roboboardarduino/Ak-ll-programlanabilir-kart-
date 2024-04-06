@@ -1,0 +1,117 @@
+#include <Servo.h>
+
+// Servo nesnesi oluştur
+Servo servoMotor;
+
+// Mesafe sensörü pin tanımlamaları
+const int trigPin = A2;
+const int echoPin = A3;
+
+void setup() {
+  // Servo motoru 10. pine bağla
+  servoMotor.attach(10);
+
+  // Mesafe sensörü pinlerini giriş ve çıkış olarak ayarla
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  // Motor pinlerini çıkış olarak ayarla
+  pinMode(6, OUTPUT);
+  pinMode(9, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(5, OUTPUT);
+
+  Serial.begin(9600);  // Seri iletişim başlat
+  servoMotor.write(90);
+  delay(500);
+}
+
+void loop() {
+  // Mesafe ölçümü yap,
+  
+  long mesafe = mesafeOlcul();
+
+  // Mesafe 15'ten küçükse önünde engel var demektir
+  if (mesafe < 50) {
+    // Önce sola dönüp mesafe ölç
+    dur();
+    delay(250);
+    servoMotor.write(175);
+    delay(500);  // Servo motorun hareket etmesi için bekle
+    long mesafe_sol = mesafeOlcul();
+
+    // Sonra sağa dönüp mesafe ölç
+    servoMotor.write(5);
+    delay(500);  // Servo motorun hareket etmesi için bekle
+    long mesafe_sag = mesafeOlcul();
+
+    // Daha uzak olan yöne dön
+    if (mesafe_sol > mesafe_sag) {
+      // Sağ tarafa dön
+      geri();
+      delay(500);
+      sag();
+      delay(1000);
+    } else {
+      // Sol tarafa dön
+      geri();
+      delay(500);
+      sol();
+      delay(1000);
+    }
+    dur();
+    servoMotor.write(90);
+    delay(250);
+  } else {
+    // Engelin olmadığı durumda ileri git
+    ileri();
+  }
+}
+
+// Mesafe ölçme fonksiyonu
+long mesafeOlcul() {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  long sure = pulseIn(echoPin, HIGH);
+  long mesafe = sure / 29 / 2;
+  return mesafe;
+}
+
+// Araç hareket kontrolü
+void ileri() {
+  digitalWrite(6, LOW);
+  digitalWrite(9, HIGH);
+  digitalWrite(3, HIGH);
+  digitalWrite(5, LOW);
+}
+
+void geri() {
+  digitalWrite(6, HIGH);
+  digitalWrite(9, LOW);
+  digitalWrite(3, LOW);
+  digitalWrite(5, HIGH);
+}
+
+void sol() {
+  digitalWrite(6, HIGH);
+  digitalWrite(9, LOW);
+  digitalWrite(3, HIGH);
+  digitalWrite(5, LOW);
+}
+
+void sag() {
+  digitalWrite(6, LOW);
+  digitalWrite(9, HIGH);
+  digitalWrite(3, LOW);
+  digitalWrite(5, HIGH);
+}
+
+void dur() {
+  digitalWrite(6, LOW);
+  digitalWrite(9, LOW);
+  digitalWrite(3, LOW);
+  digitalWrite(5, LOW);
+}
