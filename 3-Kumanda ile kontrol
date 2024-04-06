@@ -1,0 +1,90 @@
+#include <IRremote.h>
+
+const int RECV_PIN = 2;  // IR alıcı pini
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+
+const unsigned long ileri_tus = 0x886E2697;
+const unsigned long geri_tus = 0x6693581B;
+const unsigned long sol_tus = 0xD6F5A81B;
+const unsigned long sag_tus = 0x4F1D2A3F;
+const unsigned long ok_tus = 0x93627F5B;
+
+
+void setup() {
+  Serial.begin(9600);
+  irrecv.enableIRIn();  // IR alıcısını başlat
+  pinMode(9, OUTPUT);   // L298N'in IN4 Girişi
+  pinMode(6, OUTPUT);   // L298N'in IN3 Girişi
+  pinMode(3, OUTPUT);   // L298N'in IN2 Girişi
+  pinMode(5, OUTPUT);   // L298N'in IN1 Girişi
+}
+
+void loop() {
+  if (irrecv.decode(&results)) {
+    unsigned long value = results.value;  // Kumanda tarafından gönderilen değer
+
+    // Rasgele gelen değerleri filtrele
+    if (value != 0xFFFFFFFF) {
+      // Kumanda tuşlarına göre işlem yap
+      Serial.println(value, HEX);
+
+      if (value == ileri_tus) {
+        ileri();
+      } else if (value == geri_tus) {
+        geri();
+      } else if (value == sag_tus) {
+        sag();
+      } else if (value == sol_tus) {
+        sol();
+      } else if (value == ok_tus) {
+        motorDur();
+      }
+    }
+
+    irrecv.resume();  // Sonraki sinyali bekleyin
+  }
+}
+
+void ileri() {
+  digitalWrite(6, LOW);
+  digitalWrite(9, HIGH);
+  digitalWrite(3, HIGH);
+  digitalWrite(5, LOW);
+  delay(500);
+  motorDur();
+}
+
+void geri() {
+  digitalWrite(6, HIGH);
+  digitalWrite(9, LOW);
+  digitalWrite(3, LOW);
+  digitalWrite(5, HIGH);
+  delay(500);
+  motorDur();
+}
+
+void sag() {
+  digitalWrite(6, HIGH);
+  digitalWrite(9, LOW);
+  digitalWrite(3, HIGH);
+  digitalWrite(5, LOW);
+  delay(500);
+  motorDur();
+}
+
+void sol() {
+  digitalWrite(6, LOW);
+  digitalWrite(9, HIGH);
+  digitalWrite(3, LOW);
+  digitalWrite(5, HIGH);
+  delay(500);
+  motorDur();
+}
+
+void motorDur() {
+  digitalWrite(6, LOW);
+  digitalWrite(9, LOW);
+  digitalWrite(3, LOW);
+  digitalWrite(5, LOW);
+}
